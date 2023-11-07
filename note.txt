@@ -1,0 +1,2 @@
+genrate package json
+install dependencies (express,mongoose ,dotenv. nodemon, bycrypt, validator)
