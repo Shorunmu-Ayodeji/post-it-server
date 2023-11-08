@@ -1,2 +1,6 @@
 genrate package json
 install dependencies (express,mongoose ,dotenv. nodemon, bycrypt, validator)
+
+git add .
+git commit -m 'msg'
+git push
