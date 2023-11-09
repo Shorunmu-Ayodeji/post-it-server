@@ -1,5 +1,6 @@
 const Story = require("../models/story");
 const cloudinary = require('cloudinary').v2
+const fs = require('fs')
 
 //get all stories
 const getAllStories = async (req, res) => {
@@ -29,7 +30,16 @@ const getAStory = async (req, res) => {
 
 //get users stories
 const getUsersStories = async (req, res) => {
-  res.send("get users stories");
+  const {userId}  = req.user
+  try {
+    const stories = await Story.find({ writtenBy: userId}).populate(
+      "writtenBy",
+      "username"
+    )
+    res.status(200).json({success: true, stories })
+  } catch (error) {
+    res.json(error)
+  }
 };
 
 //create story
@@ -38,11 +48,14 @@ const createStory = async (req, res) => {
   //get access to the image in the req.files
   try {
     // image upload
-    const result = await cloudinary.uploader.upload(req.files.image.tempFilePath,{
+    const result = await cloudinary.uploader.upload(
+      req.files.image.tempFilePath,{
         use_filename: true,
         folder: 'postitfileimages'
     })
     req.body.image = result.secure_url;
+    //deleetes temporary files
+    fs.unlinkSync(req.files.image.tempFilePath)
     req.body.writtenBy = userId
 
     // send post request
@@ -58,12 +71,38 @@ const createStory = async (req, res) => {
 
 // update story
 const editStory = async (req, res) => {
-  res.send("update story");
+  const {userId} =req.user
+  const {storyId} = req.params
+  try {
+    const story = await Story.findByIdAndUpdate(
+      {
+        _id: storyId,
+        writtenBy: userId
+      },
+     req.body,
+      {new: true,  runValidators: true } 
+    );
+
+    res.status(200).json({ success: true, story})
+  } catch (error) {
+    res.json(error)
+  }
 };
 
 //deleteStory
 const deleteStory = async (req, res) => {
-  res.send("delete a story");
+  const {userId} = req.user
+  const {storyId} = req.params
+  try {
+    const story = await Story.findOneAndDelete({
+      _id: storyId,
+      writtenBy: userId
+    })
+    res.status(200).json({ success: true, message: "Story deleted"});
+  } catch (error) {
+    console.log(error);
+    res.json(error)
+  }
 };
 
 module.exports = {
